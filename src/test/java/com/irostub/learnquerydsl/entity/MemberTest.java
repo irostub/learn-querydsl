@@ -1,5 +1,6 @@
 package com.irostub.learnquerydsl.entity;
 
+import com.querydsl.core.QueryResults;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -95,5 +96,53 @@ class MemberTest {
                 .fetch();
         assertThat(result).extracting(Member::getUsername).containsExactly(testName);
         assertThat(result).extracting(Member::getAge).containsExactly(testAge);
+    }
+
+    @Test
+    @DisplayName("조회 방식 테스트")
+    void findTypeTest() {
+        //list 조회
+        List<Member> result1 = query
+                .selectFrom(member)
+                .fetch();
+        //단건 조회
+        Member result2 = query
+                .selectFrom(member)
+                .fetchOne();
+        //첫번째 단건 limit 조회
+        Member result3 = query
+                .selectFrom(member)
+                .fetchFirst();
+        //count 쿼리 조회
+        long count = query
+                .selectFrom(member)
+                .fetchCount();
+        //페이징 포함 조회
+        QueryResults<Member> memberQueryResults = query
+                .selectFrom(member)
+                .fetchResults();
+    }
+
+    //null data last or first sort 적용
+    @Test
+    @DisplayName("정렬 쿼리 테스트")
+    void sortTest() {
+        List<Member> fetch = query
+                .selectFrom(member)
+                .orderBy(member.age.desc().nullsLast())
+                .fetch();
+        assertThat(fetch).extracting(Member::getAge).containsExactly(31, 30, 20, 19);
+    }
+
+    @Test
+    @DisplayName("페이징 쿼리 테스트")
+    void pagingTest() {
+        List<Member> fetch = query
+                .selectFrom(member)
+                .orderBy(member.age.asc())
+                .offset(0)
+                .limit(2)
+                .fetch();
+        assertThat(fetch).extracting(Member::getAge).containsExactly(19, 20);
     }
 }
